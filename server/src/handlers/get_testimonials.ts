@@ -1,22 +1,64 @@
+import { db } from '../db';
+import { testimonialsTable } from '../db/schema';
 import { type Testimonial } from '../schema';
+import { eq, gte, desc } from 'drizzle-orm';
 
 export const getTestimonials = async (): Promise<Testimonial[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all testimonials from the database.
-    // It should query the testimonials table and return all testimonials ordered by date (newest first).
-    return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(testimonialsTable)
+      .orderBy(desc(testimonialsTable.date))
+      .execute();
+
+    return results.map(testimonial => ({
+      ...testimonial,
+      // Convert the date field back to Date object for consistency with schema
+      date: new Date(testimonial.date)
+    }));
+  } catch (error) {
+    console.error('Failed to fetch testimonials:', error);
+    throw error;
+  }
 };
 
 export const getTestimonialsByRating = async (minRating: number): Promise<Testimonial[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching testimonials with rating greater than or equal to minRating.
-    // It should query the testimonials table with a WHERE clause for rating >= minRating.
-    return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(testimonialsTable)
+      .where(gte(testimonialsTable.rating, minRating))
+      .orderBy(desc(testimonialsTable.date))
+      .execute();
+
+    return results.map(testimonial => ({
+      ...testimonial,
+      // Convert the date field back to Date object for consistency with schema
+      date: new Date(testimonial.date)
+    }));
+  } catch (error) {
+    console.error('Failed to fetch testimonials by rating:', error);
+    throw error;
+  }
 };
 
 export const getTestimonialById = async (id: number): Promise<Testimonial | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a specific testimonial by its ID from the database.
-    // It should query the testimonials table with a WHERE clause for the ID and return the testimonial or null if not found.
-    return Promise.resolve(null);
+  try {
+    const results = await db.select()
+      .from(testimonialsTable)
+      .where(eq(testimonialsTable.id, id))
+      .execute();
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    const testimonial = results[0];
+    return {
+      ...testimonial,
+      // Convert the date field back to Date object for consistency with schema
+      date: new Date(testimonial.date)
+    };
+  } catch (error) {
+    console.error('Failed to fetch testimonial by ID:', error);
+    throw error;
+  }
 };

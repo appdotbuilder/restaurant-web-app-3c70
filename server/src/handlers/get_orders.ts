@@ -1,22 +1,67 @@
-import { type Order } from '../schema';
+import { db } from '../db';
+import { ordersTable } from '../db/schema';
+import { type Order, type OrderItem } from '../schema';
+import { eq, desc } from 'drizzle-orm';
 
 export const getOrders = async (): Promise<Order[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all orders from the database.
-    // It should query the orders table and return all orders ordered by creation date (newest first).
-    return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(ordersTable)
+      .orderBy(desc(ordersTable.created_at))
+      .execute();
+
+    // Convert numeric fields back to numbers and cast items to proper type
+    return results.map(order => ({
+      ...order,
+      total_amount: parseFloat(order.total_amount),
+      items: order.items as OrderItem[]
+    }));
+  } catch (error) {
+    console.error('Failed to fetch orders:', error);
+    throw error;
+  }
 };
 
 export const getOrdersByStatus = async (status: Order['status']): Promise<Order[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching orders filtered by status from the database.
-    // It should query the orders table with a WHERE clause for the specified status.
-    return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(ordersTable)
+      .where(eq(ordersTable.status, status))
+      .orderBy(desc(ordersTable.created_at))
+      .execute();
+
+    // Convert numeric fields back to numbers and cast items to proper type
+    return results.map(order => ({
+      ...order,
+      total_amount: parseFloat(order.total_amount),
+      items: order.items as OrderItem[]
+    }));
+  } catch (error) {
+    console.error('Failed to fetch orders by status:', error);
+    throw error;
+  }
 };
 
 export const getOrderById = async (id: number): Promise<Order | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a specific order by its ID from the database.
-    // It should query the orders table with a WHERE clause for the ID and return the order or null if not found.
-    return Promise.resolve(null);
+  try {
+    const results = await db.select()
+      .from(ordersTable)
+      .where(eq(ordersTable.id, id))
+      .limit(1)
+      .execute();
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    const order = results[0];
+    return {
+      ...order,
+      total_amount: parseFloat(order.total_amount),
+      items: order.items as OrderItem[]
+    };
+  } catch (error) {
+    console.error('Failed to fetch order by ID:', error);
+    throw error;
+  }
 };
